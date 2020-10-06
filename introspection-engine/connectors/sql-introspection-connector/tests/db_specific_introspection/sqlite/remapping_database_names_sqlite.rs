@@ -89,6 +89,12 @@ async fn remapping_models_in_relations_should_work(api: &TestApi) {
         .await;
 
     let dm = r#"
+            model Post {
+                id              Int             @id @default(autoincrement())
+                user_id         Int             @unique
+                User_with_Space User_with_Space @relation(fields: [user_id], references: [id])
+            }
+
             model User_with_Space {
                 id   Int    @id @default(autoincrement())
                 name String
@@ -96,13 +102,6 @@ async fn remapping_models_in_relations_should_work(api: &TestApi) {
             
             @@map("User with Space")
             }
-                    
-            model Post {
-                id              Int             @id @default(autoincrement())
-                user_id         Int             @unique
-                User_with_Space User_with_Space @relation(fields: [user_id], references: [id])
-            }
-            
         "#;
     let result = dbg!(api.introspect().await);
     custom_assert(&result, dm);
@@ -130,15 +129,6 @@ async fn remapping_models_in_compound_relations_should_work(api: &TestApi) {
         .await;
 
     let dm = r#"
-            model User_with_Space {
-                id   Int   @id @default(autoincrement())
-                age  Int
-                Post Post?
-                  
-                @@map("User with Space")
-                @@unique([id, age], name: "sqlite_autoindex_User with Space_1")
-            }
-                      
             model Post {
                 id              Int             @id @default(autoincrement())
                 user_id         Int
@@ -146,6 +136,15 @@ async fn remapping_models_in_compound_relations_should_work(api: &TestApi) {
                 User_with_Space User_with_Space  @relation(fields: [user_id, user_age], references: [id, age])
                               
                 @@unique([user_id, user_age], name: "sqlite_autoindex_Post_1")
+            }
+
+            model User_with_Space {
+                id   Int   @id @default(autoincrement())
+                age  Int
+                Post Post?
+                  
+                @@map("User with Space")
+                @@unique([id, age], name: "sqlite_autoindex_User with Space_1")
             }
         "#;
     let result = dbg!(api.introspect().await);
@@ -174,14 +173,6 @@ async fn remapping_fields_in_compound_relations_should_work(api: &TestApi) {
         .await;
 
     let dm = r#"
-            model User {
-                id                  Int   @id @default(autoincrement())
-                age_that_is_invalid Int   @map("age-that-is-invalid")
-                Post                Post?
-                    
-                @@unique([id, age_that_is_invalid], name: "sqlite_autoindex_User_1")
-            }
-                
             model Post {
                 id       Int  @id @default(autoincrement())
                 user_id  Int
@@ -189,6 +180,14 @@ async fn remapping_fields_in_compound_relations_should_work(api: &TestApi) {
                 User     User @relation(fields: [user_id, user_age], references: [id, age_that_is_invalid])
                     
                 @@unique([user_id, user_age], name: "sqlite_autoindex_Post_1")
+            }
+
+            model User {
+                id                  Int   @id @default(autoincrement())
+                age_that_is_invalid Int   @map("age-that-is-invalid")
+                Post                Post?
+                    
+                @@unique([id, age_that_is_invalid], name: "sqlite_autoindex_User_1")
             }
         "#;
     let result = dbg!(api.introspect().await);

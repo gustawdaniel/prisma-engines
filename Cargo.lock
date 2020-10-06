@@ -342,7 +342,7 @@ dependencies = [
 [[package]]
 name = "barrel"
 version = "0.6.6-alpha.0"
-source = "git+https://github.com/prisma/barrel.git?branch=mssql-support#b6298a4208083bfb63796cdc24ce1e4bcf7f62a8"
+source = "git+https://github.com/prisma/barrel.git?branch=mssql-support#3dab6a46350891f49e4642918f6057914acabd67"
 
 [[package]]
 name = "base-x"
@@ -1547,6 +1547,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "introspection-engine-tests"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "barrel",
+ "datamodel",
+ "datamodel-connector",
+ "indoc 1.0.2",
+ "introspection-connector",
+ "pretty_assertions",
+ "quaint",
+ "serde",
+ "serde_json",
+ "sql-datamodel-connector",
+ "sql-introspection-connector",
+ "sql-schema-describer",
+ "test-macros",
+ "test-setup",
+ "tracing",
+]
+
+[[package]]
 name = "iovec"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2651,7 +2673,7 @@ dependencies = [
 [[package]]
 name = "quaint"
 version = "0.2.0-alpha.13"
-source = "git+https://github.com/prisma/quaint#d023a0522602140064822dfe98f6996a9c737064"
+source = "git+https://github.com/prisma/quaint#95be46502571c425642c1006d8c40b8d39f5bfa8"
 dependencies = [
  "async-trait",
  "base64 0.11.0",

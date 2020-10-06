@@ -3,6 +3,51 @@ use barrel::types;
 use test_harness::*;
 
 #[test_each_connector(tags("postgres"))]
+async fn introspecting_a_one_to_one_relation_on_a_compound_primary_key_should_work(api: &TestApi) {
+    //Todo
+    let barrel = api.barrel();
+    let _setup_schema = barrel
+        .execute(|migration| {
+            migration.create_table("User", |t| {
+                t.add_column("id_1", types::integer());
+                t.add_column("id_2", types::integer());
+                t.inject_custom("Primary Key(id_1, id_2)");
+            });
+            migration.create_table("Post", |t| {
+                t.add_column("id_1", types::integer());
+                t.add_column("id_2", types::integer());
+                t.inject_custom("Primary Key(id_1, id_2)");
+                t.inject_custom(
+                    "constraint \"fk_test\" \
+                foreign key (\"id_1\", \"id_2\") \
+                REFERENCES \"User\" (\"id_1\", \"id_2\")",
+                );
+            });
+        })
+        .await;
+
+    let dm = r#"
+             model Post {
+               id_1 Int
+               id_2 Int
+               User User @relation(fields: [id_1, id_2], references: [id_1, id_2])
+                   
+               @@id([id_1, id_2])
+             }
+                     
+             model User {
+               id_1 Int
+               id_2 Int
+               Post Post?
+                           
+               @@id([id_1, id_2])
+             }                        
+        "#;
+    let result = dbg!(api.introspect().await);
+    custom_assert(&result, dm);
+}
+
+#[test_each_connector(tags("postgres"))]
 #[test]
 async fn compound_foreign_keys_should_work_for_required_one_to_one_relations(api: &TestApi) {
     let barrel = api.barrel();

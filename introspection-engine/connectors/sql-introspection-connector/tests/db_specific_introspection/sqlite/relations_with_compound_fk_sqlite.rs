@@ -24,14 +24,6 @@ async fn compound_foreign_keys_should_work_for_one_to_one_relations(api: &TestAp
         .await;
 
     let dm = r#"
-            model User {
-                id   Int   @id @default(autoincrement())
-                age  Int
-                Post Post?
-                
-                @@unique([id, age], name: "sqlite_autoindex_User_1")
-            }
-            
             model Post {
                 id       Int   @id @default(autoincrement())
                 user_id  Int?
@@ -41,6 +33,13 @@ async fn compound_foreign_keys_should_work_for_one_to_one_relations(api: &TestAp
                 @@unique([user_id, user_age], name: "sqlite_autoindex_Post_1")
             }
 
+            model User {
+                id   Int   @id @default(autoincrement())
+                age  Int
+                Post Post?
+                
+                @@unique([id, age], name: "sqlite_autoindex_User_1")
+            }
         "#;
     let result = dbg!(api.introspect().await);
     custom_assert(&result, dm);
@@ -68,14 +67,6 @@ async fn compound_foreign_keys_should_work_for_required_one_to_one_relations(api
         .await;
 
     let dm = r#"
-            model User {
-                id   Int   @id @default(autoincrement())
-                age  Int
-                Post Post?
-                
-                @@unique([id, age], name: "sqlite_autoindex_User_1")
-            }
-            
             model Post {
                 id       Int  @id @default(autoincrement())
                 user_id  Int
@@ -85,6 +76,13 @@ async fn compound_foreign_keys_should_work_for_required_one_to_one_relations(api
                 @@unique([user_id, user_age], name: "sqlite_autoindex_Post_1")
             }
 
+            model User {
+                id   Int   @id @default(autoincrement())
+                age  Int
+                Post Post?
+                
+                @@unique([id, age], name: "sqlite_autoindex_User_1")
+            }
         "#;
     let result = dbg!(api.introspect().await);
     custom_assert(&result, dm);
@@ -111,14 +109,6 @@ async fn compound_foreign_keys_should_work_for_one_to_many_relations(api: &TestA
         .await;
 
     let dm = r#"
-             model User {
-                  id   Int    @id @default(autoincrement())
-                  age  Int
-                  Post Post[]
-                      
-                  @@unique([id, age], name: "sqlite_autoindex_User_1")
-            }
-                    
             model Post {
                   id       Int   @id @default(autoincrement())
                   user_id  Int?
@@ -126,6 +116,13 @@ async fn compound_foreign_keys_should_work_for_one_to_many_relations(api: &TestA
                   User     User? @relation(fields: [user_id, user_age], references: [id, age])
             }
 
+            model User {
+                  id   Int    @id @default(autoincrement())
+                  age  Int
+                  Post Post[]
+                      
+                  @@unique([id, age], name: "sqlite_autoindex_User_1")
+            }
         "#;
     let result = dbg!(api.introspect().await);
     custom_assert(&result, dm);
@@ -155,15 +152,6 @@ async fn compound_foreign_keys_should_work_for_duplicate_one_to_many_relations(a
         .await;
 
     let dm = r#"
-            model User {
-                id                                              Int    @id @default(autoincrement())
-                age                                             Int
-                Post_Post_other_user_id_other_user_ageToUser    Post[] @relation("Post_other_user_id_other_user_ageToUser")
-                Post_Post_user_id_user_ageToUser                Post[] @relation("Post_user_id_user_ageToUser")
-                    
-                @@unique([id, age], name: "sqlite_autoindex_User_1")
-            }
-                      
             model Post {
                id                                               Int   @id @default(autoincrement())
                user_id                                          Int?
@@ -174,6 +162,14 @@ async fn compound_foreign_keys_should_work_for_duplicate_one_to_many_relations(a
                User_Post_user_id_user_ageToUser                 User? @relation("Post_user_id_user_ageToUser", fields: [user_id, user_age], references: [id, age])
             }
 
+            model User {
+                id                                              Int    @id @default(autoincrement())
+                age                                             Int
+                Post_Post_other_user_id_other_user_ageToUser    Post[] @relation("Post_other_user_id_other_user_ageToUser")
+                Post_Post_user_id_user_ageToUser                Post[] @relation("Post_user_id_user_ageToUser")
+                    
+                @@unique([id, age], name: "sqlite_autoindex_User_1")
+            }
         "#;
     let result = dbg!(api.introspect().await);
     custom_assert(&result, dm);
@@ -200,19 +196,19 @@ async fn compound_foreign_keys_should_work_for_required_one_to_many_relations(ap
         .await;
 
     let dm = r#"
+            model Post {
+                id       Int  @id @default(autoincrement())
+                user_id  Int
+                user_age Int
+                User     User @relation(fields: [user_id, user_age], references: [id, age])
+            }
+
             model User {
                 id   Int    @id @default(autoincrement())
                 age  Int
                 Post Post[]
                 
                 @@unique([id, age], name: "sqlite_autoindex_User_1")
-            }
-            
-            model Post {
-                id       Int  @id @default(autoincrement())
-                user_id  Int
-                user_age Int
-                User     User @relation(fields: [user_id, user_age], references: [id, age])
             }
         "#;
     let result = dbg!(api.introspect().await);
@@ -389,14 +385,6 @@ async fn compound_foreign_keys_should_work_for_one_to_many_relations_with_non_un
         .await;
 
     let dm = r#"
-            model User {
-                id   Int    @id @default(autoincrement())
-                age  Int
-                Post Post[]
-                
-                @@unique([id, age], name: "sqlite_autoindex_User_1")
-            }
-            
             model Post {
                 id       Int  @id @default(autoincrement())
                 user_id  Int
@@ -406,6 +394,13 @@ async fn compound_foreign_keys_should_work_for_one_to_many_relations_with_non_un
                 @@index([user_id, user_age], name: "test")
             }
             
+            model User {
+                id   Int    @id @default(autoincrement())
+                age  Int
+                Post Post[]
+                
+                @@unique([id, age], name: "sqlite_autoindex_User_1")
+            }
         "#;
     let result = dbg!(api.introspect().await);
     custom_assert(&result, dm);
