@@ -112,7 +112,7 @@ impl RpcApi {
         match result {
             Ok(result) => Ok(result),
             Err(RunCommandError::JsonRpcError(err)) => Err(err),
-            Err(RunCommandError::CrateError(err)) => Err(executor.render_jsonrpc_error(err)),
+            Err(RunCommandError::CommandError(err)) => Err(executor.render_jsonrpc_error(err)),
         }
     }
 
@@ -188,7 +188,7 @@ fn render(result: impl serde::Serialize) -> Result<serde_json::Value, RunCommand
 #[derive(Debug)]
 enum RunCommandError {
     JsonRpcError(JsonRpcError),
-    CrateError(crate::Error),
+    CommandError(CommandError),
 }
 
 impl From<JsonRpcError> for RunCommandError {
@@ -197,8 +197,8 @@ impl From<JsonRpcError> for RunCommandError {
     }
 }
 
-impl From<crate::Error> for RunCommandError {
-    fn from(e: crate::Error) -> Self {
-        RunCommandError::CrateError(e)
+impl From<CommandError> for RunCommandError {
+    fn from(e: CommandError) -> Self {
+        RunCommandError::CommandError(e)
     }
 }

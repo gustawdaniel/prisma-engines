@@ -47,7 +47,7 @@ impl Apply<'_> {
         self.send_inner().await.map_err(|err| api.render_error(err))
     }
 
-    async fn send_inner(self) -> Result<MigrationStepsResultOutput, migration_core::error::Error> {
+    async fn send_inner(self) -> Result<MigrationStepsResultOutput, migration_core::CommandError> {
         let migration_id = self.migration_id.unwrap_or_else(unique_migration_id);
 
         let input = ApplyMigrationInput {

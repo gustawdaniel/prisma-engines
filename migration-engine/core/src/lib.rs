@@ -5,29 +5,30 @@
 #[allow(missing_docs)]
 pub mod api;
 pub mod commands;
-pub mod error;
 #[allow(missing_docs)]
 pub mod migration;
 #[allow(missing_docs)]
 pub mod migration_engine;
 
 pub use api::GenericApi;
-pub use commands::{ApplyMigrationInput, InferMigrationStepsInput, MigrationStepsResultOutput};
-pub use error::CoreResult;
+pub use commands::{ApplyMigrationInput, CommandError, InferMigrationStepsInput, MigrationStepsResultOutput};
 
-use commands::{CommandError, CommandResult};
+use commands::CommandResult;
 use datamodel::{
     common::provider_names::{MSSQL_SOURCE_NAME, MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
     dml::Datamodel,
+    Configuration,
 };
-use error::Error;
 use migration_connector::ConnectorError;
 use sql_migration_connector::SqlMigrationConnector;
 use std::sync::Arc;
 
+/// The top-level result type for the migration core.
+pub type CoreResult<T> = CommandResult<T>;
+
 /// Top-level constructor for the migration engine API.
 pub async fn migration_api(datamodel: &str) -> CoreResult<Arc<dyn api::GenericApi>> {
-    let config = datamodel::parse_configuration(datamodel)?;
+    let config = parse_configuration(datamodel)?;
 
     let source = config
         .datasources
@@ -38,7 +39,7 @@ pub async fn migration_api(datamodel: &str) -> CoreResult<Arc<dyn api::GenericAp
         #[cfg(feature = "sql")]
         provider if POSTGRES_SOURCE_NAME == provider => {
             let mut u = url::Url::parse(&source.url().value).map_err(|url_error| {
-                Error::ConnectorError(ConnectorError::url_parse_error(url_error, &source.url().value))
+                CommandError::ConnectorError(ConnectorError::url_parse_error(url_error, &source.url().value))
             })?;
 
             let params: Vec<(String, String)> = u.query_pairs().map(|(k, v)| (k.to_string(), v.to_string())).collect();
@@ -73,7 +74,7 @@ pub async fn migration_api(datamodel: &str) -> CoreResult<Arc<dyn api::GenericAp
 
 /// Create the database referenced by the passed in Prisma schema.
 pub async fn create_database(schema: &str) -> CoreResult<String> {
-    let config = datamodel::parse_configuration(schema)?;
+    let config = parse_configuration(schema)?;
 
     let source = config
         .datasources
@@ -98,7 +99,7 @@ pub async fn create_database(schema: &str) -> CoreResult<String> {
 
 /// Database setup for connector-test-kit.
 pub async fn qe_setup(prisma_schema: &str) -> CoreResult<()> {
-    let config = datamodel::parse_configuration(prisma_schema)?;
+    let config = parse_configuration(prisma_schema)?;
 
     let source = config
         .datasources
@@ -121,6 +122,11 @@ pub async fn qe_setup(prisma_schema: &str) -> CoreResult<()> {
     }
 
     Ok(())
+}
+
+fn parse_configuration(datamodel: &str) -> CommandResult<Configuration> {
+    datamodel::parse_configuration(&datamodel)
+        .map_err(|err| CommandError::ReceivedBadDatamodel(err.to_pretty_string("schema.prisma", datamodel)))
 }
 
 pub(crate) fn parse_datamodel(datamodel: &str) -> CommandResult<Datamodel> {
